@@ -1,0 +1,57 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Node & Frontend Dependencies / Build
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Database & Runtime State
+*.db
+*.sqlite
+*.sqlite3
+backend/governance.db
+governance.db
+
+# Logs & Temporary Files
+*.log
+logs/
+*.tmp
+*.temp
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+
+# Internal Agent & AI Configs
+.agents/
+.gemini/
+.claude/
+.codex/
