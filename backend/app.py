@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import os
 import random
 import sqlite3
 import uuid
@@ -11,13 +12,10 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Database file
-import os
 DB_FILE = os.path.join(os.path.dirname(__file__), "governance.db")
 
 app = FastAPI(title="Aegis | Governance Layer for Financial Agents")
 
-# CORS middleware for frontend React app & cloud production origins
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
 allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",")] if allowed_origins_env != "*" else ["*"]
 
@@ -30,9 +28,6 @@ app.add_middleware(
 )
 
 
-# -----------------------------------------------------------------------------
-# Database Setup & Helpers
-# -----------------------------------------------------------------------------
 def get_db():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -73,7 +68,6 @@ def init_db():
 
     conn.commit()
 
-    # Seed 5 default agent personas if empty
     cursor.execute("SELECT COUNT(*) as count FROM agents")
     if cursor.fetchone()["count"] == 0:
         seed_agents = [
@@ -139,10 +133,9 @@ def init_db():
     conn.close()
 
 
-# -----------------------------------------------------------------------------
-# WebSocket Manager for Live Feed
-# -----------------------------------------------------------------------------
 class ConnectionManager:
+    """Manages active WebSocket client connections for real-time telemetry."""
+
     def __init__(self):
         self.active_connections: List[WebSocket] = []
 
@@ -165,20 +158,14 @@ class ConnectionManager:
             self.disconnect(conn)
 
     async def broadcast_with_agent(self, log_entry: dict, agent: dict):
-        """Send log entry + current agent state so frontend skips the GET /agents poll."""
         msg = {**log_entry, "_agent_snapshot": agent}
         await self.broadcast(msg)
 
 
 ws_manager = ConnectionManager()
-
-# Global state for background simulator control
 simulator_running = True
 
 
-# -----------------------------------------------------------------------------
-# Pydantic Schemas
-# -----------------------------------------------------------------------------
 class AgentCreate(BaseModel):
     agent_id: str
     display_name: str
@@ -199,10 +186,8 @@ class ActionAttempt(BaseModel):
     amount: float = 0.0
 
 
-# -----------------------------------------------------------------------------
-# Policy Engine
-# -----------------------------------------------------------------------------
 def evaluate_policy(agent: dict, action_type: str, amount: float):
+    """Executes sequential policy checks: Status -> Block-List -> Allow-List -> Spend Cap."""
     if agent["status"] == "stopped":
         return "blocked", "emergency_stop_active"
     if action_type in agent["blocked_actions"]:
@@ -214,11 +199,7 @@ def evaluate_policy(agent: dict, action_type: str, amount: float):
     return "approved", None
 
 
-# -----------------------------------------------------------------------------
-# Hash Chain Audit Logger
-# -----------------------------------------------------------------------------
 def compute_entry_hash(entry_data: dict) -> str:
-    # Sort keys to ensure canonical string format
     payload = json.dumps(entry_data, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -234,7 +215,6 @@ def record_audit_entry(
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get latest entry hash for chain linkage
     cursor.execute(
         "SELECT entry_hash FROM audit_logs ORDER BY rowid DESC LIMIT 1"
     )
@@ -283,9 +263,6 @@ def record_audit_entry(
     return entry_data
 
 
-# -----------------------------------------------------------------------------
-# REST Endpoints
-# -----------------------------------------------------------------------------
 @app.on_event("startup")
 def startup_event():
     init_db()
@@ -455,7 +432,6 @@ async def simulate_action(attempt: ActionAttempt):
 
     conn.close()
 
-    # Record hash-chained audit log
     log_entry = record_audit_entry(
         agent_id=attempt.agent_id,
         action_type=attempt.action_type,
@@ -465,7 +441,6 @@ async def simulate_action(attempt: ActionAttempt):
         policy_version=agent["policy_version"],
     )
 
-    # Re-read agent state after potential spend update for accurate snapshot
     conn2 = get_db()
     snap_row = conn2.execute("SELECT * FROM agents WHERE agent_id = ?", (attempt.agent_id,)).fetchone()
     conn2.close()
@@ -514,6 +489,7 @@ def get_audit_log(
 
 @app.get("/audit-log/verify")
 def verify_audit_chain():
+    """Mathematically verifies unbroken SHA-256 parent-child hash linkage across audit logs."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM audit_logs ORDER BY rowid ASC")
@@ -607,15 +583,11 @@ async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
         while True:
-            # Keep connection open & receive any control messages if needed
             await websocket.receive_text()
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
 
 
-# -----------------------------------------------------------------------------
-# Background Simulator Loop
-# -----------------------------------------------------------------------------
 async def background_simulator():
     action_pool = {
         "travel_agent_01": [
@@ -645,7 +617,7 @@ async def background_simulator():
         ],
     }
 
-    await asyncio.sleep(2)  # Initial delay
+    await asyncio.sleep(2)
     while True:
         await asyncio.sleep(random.uniform(2.0, 4.0))
         if not simulator_running:
@@ -655,7 +627,6 @@ async def background_simulator():
         selected_agent = random.choice(agent_ids)
         action_type, amount = random.choice(action_pool[selected_agent])
 
-        # Random variation on amount
         if amount > 0:
             amount = round(amount * random.uniform(0.8, 1.5), 2)
 
@@ -687,7 +658,7 @@ async def background_simulator():
                         (new_spend, selected_agent),
                     )
                     conn.commit()
-                    agent["spend_used_today"] = new_spend  # reflect in snapshot
+                    agent["spend_used_today"] = new_spend
 
                 log_entry = record_audit_entry(
                     agent_id=selected_agent,

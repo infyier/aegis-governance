@@ -20,8 +20,8 @@ import {
   Layers
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
-const WS_URL = 'ws://localhost:8000/ws/live-feed';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const WS_URL = API_BASE.replace(/^http/, 'ws') + '/ws/live-feed';
 
 export default function App() {
   const [agents, setAgents] = useState([]);
@@ -39,11 +39,10 @@ export default function App() {
   const [auditLimit, setAuditLimit] = useState(50);
   const [copiedHash, setCopiedHash] = useState(null);
   const [isFeedHovered, setIsFeedHovered] = useState(false);
-  const [activeTabMap, setActiveTabMap] = useState({}); // Per-agent active tab: 'allowed' | 'blocked'
+  const [activeTabMap, setActiveTabMap] = useState({});
 
   const feedRef = useRef(null);
 
-  // Fetch agent states (mount + manual actions only — WS pushes live updates)
   const fetchAgents = async () => {
     try {
       const res = await fetch(`${API_BASE}/agents`);
@@ -60,7 +59,6 @@ export default function App() {
     }
   };
 
-  // Fetch audit logs — re-runs on filter/limit change
   const fetchAuditLogs = async (limit = auditLimit) => {
     try {
       let url = `${API_BASE}/audit-log?limit=${limit}`;
@@ -69,11 +67,10 @@ export default function App() {
       const res = await fetch(url);
       if (res.ok) setAuditLogs(await res.json());
     } catch (e) {
-      console.error('Failed to fetch audit logs', e);
+      console.error(e);
     }
   };
 
-  // WS snapshots keep agent cards fresh
   useEffect(() => {
     fetchAgents();
     fetchAuditLogs(auditLimit);
@@ -84,7 +81,6 @@ export default function App() {
     isFeedHoveredRef.current = isFeedHovered;
   }, [isFeedHovered]);
 
-  // WebSocket for real-time live feed
   useEffect(() => {
     let ws;
     let isMounted = true;
@@ -104,7 +100,6 @@ export default function App() {
       ws.onmessage = (event) => {
         try {
           const newEntry = JSON.parse(event.data);
-          // Update agent card from embedded snapshot — no extra fetch needed
           if (newEntry._agent_snapshot) {
             const snap = newEntry._agent_snapshot;
             setAgents((prev) => prev.map((a) => a.agent_id === snap.agent_id ? snap : a));
@@ -120,7 +115,7 @@ export default function App() {
             return [newEntry, ...prev];
           });
         } catch (e) {
-          console.error('Error parsing WS message', e);
+          console.error(e);
         }
       };
     };
@@ -141,14 +136,12 @@ export default function App() {
     };
   }, []);
 
-  // Copy hash helper
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopiedHash(text);
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  // Toggle simulator
   const toggleSimulator = async () => {
     const nextState = !simulatorRunning;
     try {
@@ -159,7 +152,6 @@ export default function App() {
     }
   };
 
-  // Fleet Emergency Stop
   const handleFleetEmergencyStop = async () => {
     if (!window.confirm('Stop ALL agents in the fleet immediately?')) return;
     try {
@@ -170,7 +162,6 @@ export default function App() {
     }
   };
 
-  // Per Agent Emergency Stop
   const handleAgentStop = async (agentId) => {
     try {
       await fetch(`${API_BASE}/emergency-stop/${agentId}`, { method: 'POST' });
@@ -180,7 +171,6 @@ export default function App() {
     }
   };
 
-  // Resume Agent / All
   const handleResume = async (agentId = null) => {
     try {
       const url = agentId ? `${API_BASE}/resume/${agentId}` : `${API_BASE}/resume-all`;
@@ -191,7 +181,6 @@ export default function App() {
     }
   };
 
-  // Reset Agent Spend
   const handleResetSpend = async (agentId) => {
     try {
       await fetch(`${API_BASE}/agents/${agentId}/reset-spend`, { method: 'POST' });
@@ -201,7 +190,6 @@ export default function App() {
     }
   };
 
-  // Reset All Fleet Spend
   const handleResetAllSpend = async () => {
     try {
       await fetch(`${API_BASE}/reset-all-spend`, { method: 'POST' });
@@ -211,7 +199,6 @@ export default function App() {
     }
   };
 
-  // Demo Narrative Triggers
   const triggerDemoMoment = async (moment) => {
     let payload = {};
     if (moment === 1) {
@@ -234,7 +221,6 @@ export default function App() {
     }
   };
 
-  // Verify Audit Chain
   const handleVerifyChain = async () => {
     setVerifying(true);
     try {
@@ -243,12 +229,11 @@ export default function App() {
       setVerificationResult(data);
     } catch (e) {
       setVerificationResult({ valid: false, reason: 'Request failed' });
-    } finally {
+    } fontinally: {
       setVerifying(false);
     }
   };
 
-  // Save Policy Update
   const handleSavePolicy = async (agentId, updatedPolicy) => {
     try {
       await fetch(`${API_BASE}/agents/${agentId}/policy`, {
@@ -265,7 +250,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-gray-100 font-sans p-4 md:p-6">
-      {/* HEADER BAR */}
       <header className="panel-base p-4 mb-6 flex flex-col lg:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 bg-[#1C2128] rounded-xl text-[#E8A33D]">
@@ -284,7 +268,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Global Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={toggleSimulator}
@@ -320,7 +303,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* BACKEND OFFLINE BANNER */}
       {isError && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-[#C1443B]/10 border border-[#C1443B]/40 text-[#C1443B] text-xs font-mono flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -328,13 +310,12 @@ export default function App() {
         </div>
       )}
 
-      {/* PRESENTER VIEW (SCRIPT TRIGGERS) */}
       <section className="panel-demo p-4 mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-[#E8A33D] flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-[#E8A33D]" /> Presenter View — Scenario Triggers
           </h2>
-          <span className="text-[11px] text-[#8A93A3] font-mono">Simulate judge evaluation moments</span>
+          <span className="text-[11px] text-[#8A93A3] font-mono font-semibold">Live Policy Evaluation Drivers</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
@@ -372,9 +353,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* MAIN GRID: AGENTS TILES & REALTIME LIVE FEED */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        {/* AGENT TILES (2 COLUMNS) */}
         <div className="xl:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold text-[#8A93A3] uppercase tracking-wider flex items-center gap-2">
@@ -407,7 +386,6 @@ export default function App() {
                       isStopped ? 'border-[#C1443B]/60 bg-[#1A1214]' : 'border-[#1E232A] hover:border-[#2D333B]'
                     }`}
                   >
-                    {/* Top Row: Name & Status */}
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-sm font-bold text-[#E6E8EB]">{agent.display_name}</h3>
@@ -424,7 +402,6 @@ export default function App() {
                       </span>
                     </div>
 
-                    {/* Spend Progress Section */}
                     <div className="bg-[#0E1115] rounded-lg p-2.5 mb-3 border border-[#1E232A]">
                       <div className="flex justify-between text-[11px] mb-1 font-mono">
                         <span className="text-[#8A93A3]">Daily Spend</span>
@@ -442,7 +419,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Clean Action List Tabs (Text 1: drop pill backgrounds on static lists) */}
                     <div className="mb-3">
                       <div className="flex border-b border-[#1E232A] mb-2 font-mono">
                         <button
@@ -492,7 +468,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Card Footer: Clean Controls */}
                     <div className="flex items-center justify-between pt-2 border-t border-[#1E232A]">
                       <div className="flex items-center gap-2 font-mono">
                         <button
@@ -534,7 +509,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* REALTIME LIVE FEED (Text 1: clean status tags, no "WS Broadcast" jargon) */}
         <div
           onMouseEnter={() => setIsFeedHovered(true)}
           onMouseLeave={() => setIsFeedHovered(false)}
@@ -601,7 +575,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* IMMUTABLE AUDIT LOG & HASH CHAIN VERIFICATION */}
       <section className="panel-base p-6 border border-[#1E232A]">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#1E232A]">
           <div>
@@ -647,7 +620,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-4 mb-4 text-xs font-mono">
           <div className="flex items-center gap-2">
             <span className="text-[#8A93A3]">Agent:</span>
@@ -679,7 +651,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Log Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs font-mono">
             <thead>
@@ -755,7 +726,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* POLICY EDITOR MODAL */}
       {editingAgent && (
         <PolicyEditorModal
           agent={editingAgent}
@@ -767,7 +737,6 @@ export default function App() {
   );
 }
 
-// Inline Policy Editor Modal
 const KNOWN_ACTIONS = 'flight_rebook, hotel_rebook, waive_fee, account_summary, balance_check, wire_transfer, credit_limit_increase, score_check, card_issue, card_lock';
 
 function PolicyEditorModal({ agent, onClose, onSave }) {
@@ -775,7 +744,6 @@ function PolicyEditorModal({ agent, onClose, onSave }) {
   const [blocked, setBlocked] = useState(agent.blocked_actions.join(', '));
   const [spendCap, setSpendCap] = useState(agent.spend_cap_daily);
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
