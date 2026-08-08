@@ -91,21 +91,38 @@ As financial institutions race to deploy autonomous AI agents to automate custom
 - Python 3.10+
 - Node.js 18+ & npm
 
-### 1. Start the Backend API
+### ⚡ Option A: 1-Command Launch (Recommended)
+
+First install frontend dependencies once:
 ```bash
-# From project root directory
+cd frontend && npm install && cd ..
+```
+
+Then run **both backend & frontend together** with a single command from the project root:
+
+```bash
+npm start
+# OR using bash script:
+./start.sh
+```
+
+- **Frontend Dashboard:** `http://localhost:5173`
+- **Backend API:** `http://localhost:8000`
+- **OpenAPI Docs:** `http://localhost:8000/docs`
+
+---
+
+### 🔧 Option B: Manual Separate Launch
+
+**1. Backend API:**
+```bash
 python3 -m uvicorn backend.app:app --host 0.0.0.0 --port 8000
 ```
-- API server: `http://localhost:8000`
-- Interactive OpenAPI Docs: `http://localhost:8000/docs`
 
-### 2. Start the Frontend Control Tower
+**2. Frontend Dashboard:**
 ```bash
-cd frontend
-npm install
-npm run dev -- --host
+cd frontend && npm run dev
 ```
-- Open browser at `http://localhost:5173`
 
 ---
 
