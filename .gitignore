@@ -41,9 +41,10 @@ logs/
 *.tmp
 *.temp
 
-# OS Generated Files
+# OS Generated Files & Temp Downloads
 .DS_Store
 Thumbs.db
+*.crdownload
 
 # IDE & Editor Settings
 .vscode/
