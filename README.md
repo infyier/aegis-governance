@@ -91,28 +91,35 @@ As financial institutions race to deploy autonomous AI agents to automate custom
 - Python 3.10+
 - Node.js 18+ & npm
 
-### ⚡ Option A: 1-Command Launch (Recommended)
+### ⚡ Option A: 1-Command Docker Container Launch (Recommended)
 
-First install frontend dependencies once:
+Run full stack containerized with a single command:
 ```bash
-cd frontend && npm install && cd ..
+docker compose up --build
 ```
-
-Then run **both backend & frontend together** with a single command from the project root:
-
-```bash
-npm start
-# OR using bash script:
-./start.sh
-```
-
 - **Frontend Dashboard:** `http://localhost:5173`
 - **Backend API:** `http://localhost:8000`
 - **OpenAPI Docs:** `http://localhost:8000/docs`
 
 ---
 
-### 🔧 Option B: Manual Separate Launch
+### ⚡ Option B: 1-Command Local Launch
+
+First install frontend dependencies once:
+```bash
+cd frontend && npm install && cd ..
+```
+
+Then run **both backend & frontend together**:
+```bash
+npm start
+# OR using bash script:
+./start.sh
+```
+
+---
+
+### 🔧 Option C: Manual Separate Launch
 
 **1. Backend API:**
 ```bash
@@ -126,22 +133,32 @@ cd frontend && npm run dev
 
 ---
 
+## 🌐 Cloud Deployment (Vercel & Render)
+
+- **Frontend (Vercel):** Connect repo, set root to `frontend`, preset `Vite`, environment variable `VITE_API_BASE_URL` pointing to backend API.
+- **Backend (Render / Railway):** Deploy as Web Service, environment `Python 3.11`, build command `pip install -r requirements.txt`, start command `uvicorn app:app --host 0.0.0.0 --port $PORT` (working dir `backend`).
+
+---
+
 ## 📁 Repository Structure
 
 ```
 governance-project-agentic/
 ├── backend/
 │   ├── app.py              # FastAPI server, Policy Engine, Hash-Chain Logger, Simulator
+│   ├── Dockerfile          # Python 3.11 slim backend container
+│   ├── requirements.txt    # Backend dependencies
 │   └── governance.db       # SQLite database (agents table & audit_logs table)
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx         # Control Tower UI component
-│   │   ├── index.css       # Tailwind CSS v4 styling & dark theme tokens
-│   │   └── main.jsx        # React entry point
+│   ├── src/                # React components, Tailwind styling, WebSocket hooks
+│   ├── Dockerfile          # Multi-stage Nginx frontend container
+│   ├── vercel.json         # Vercel SPA routing configuration
 │   ├── index.html          # HTML entry point with Aegis title metadata
 │   └── vite.config.js      # Vite build configuration
 ├── docs/                   # Technical documentation specs & hackathon brief
 ├── docs_images/            # Visual assets, architecture diagrams, and working GIF
+├── docker-compose.yml      # Root Docker orchestration for full-stack deployment
+├── .dockerignore           # Docker build exclusions
 ├── Aegis_Pitch_Deck.odp    # Official 10-slide submission pitch deck
 ├── package.json            # 1-command startup npm script configuration
 ├── start.sh                # 1-command bash startup script for Linux/macOS
