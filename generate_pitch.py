@@ -13,7 +13,7 @@ import os
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 
-OUT_FILE = os.path.join(os.path.dirname(__file__), "Aegis_Pitch_Deck.pptx")
+OUT_FILE = os.path.join(os.path.dirname(__file__), "Aegis_Pitch_Deck.odp")
 IMG_DIR = os.path.join(os.path.dirname(__file__), "docs_images")
 
 IMG_UI   = os.path.join(IMG_DIR, "control_tower_ui.png")

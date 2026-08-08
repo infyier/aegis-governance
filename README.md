@@ -124,7 +124,7 @@ governance-project-agentic/
 │   └── vite.config.js      # Vite build configuration
 ├── docs/                   # Technical documentation specs
 ├── docs_images/            # Visual assets, architecture diagrams, and working GIF
-├── Aegis_Pitch_Deck.pptx   # Official 10-slide submission pitch deck
+├── Aegis_Pitch_Deck.odp    # Official 10-slide submission pitch deck
 ├── generate_pitch.py       # Automated pitch deck generator script
 └── README.md               # Project documentation
 ```
