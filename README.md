@@ -82,6 +82,7 @@ As financial institutions race to deploy autonomous AI agents to automate custom
 | **Real-Time Layer** | FastAPI WebSockets, Custom React WS Hooks |
 | **Cryptographic Ledger** | SHA-256 Parent-Child Hash Chaining (Python `hashlib`) |
 | **Database Storage** | SQLite (WAL mode) — swappable to PostgreSQL with WORM storage |
+| **DevOps & Containerization** | Docker, Docker Compose, Nginx, Vercel SPA |
 
 ---
 
@@ -162,6 +163,7 @@ governance-project-agentic/
 ├── Aegis_Pitch_Deck.odp    # Official 10-slide submission pitch deck
 ├── package.json            # 1-command startup npm script configuration
 ├── start.sh                # 1-command bash startup script for Linux/macOS
+├── LICENSE                 # MIT open-source license
 └── README.md               # Project documentation
 ```
 
