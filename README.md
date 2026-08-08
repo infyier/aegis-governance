@@ -8,10 +8,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4.0-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![American Express CodeStreet 2026](https://img.shields.io/badge/Amex%20CodeStreet-2026-006FCF?style=flat-square&logo=americanexpress&logoColor=white)](docs/hackathon-prompt.md)
 
 *Real-Time Policy Interception • SHA-256 Hash-Chained Audit Ledger • Fleet Emergency Kill Switches*
+
+*Built for **American Express CodeStreet 2026 Hackathon** — Governance Layer for Financial Agents*
 
 ---
 
