@@ -140,10 +140,11 @@ governance-project-agentic/
 │   │   └── main.jsx        # React entry point
 │   ├── index.html          # HTML entry point with Aegis title metadata
 │   └── vite.config.js      # Vite build configuration
-├── docs/                   # Technical documentation specs
+├── docs/                   # Technical documentation specs & hackathon brief
 ├── docs_images/            # Visual assets, architecture diagrams, and working GIF
 ├── Aegis_Pitch_Deck.odp    # Official 10-slide submission pitch deck
-├── generate_pitch.py       # Automated pitch deck generator script
+├── package.json            # 1-command startup npm script configuration
+├── start.sh                # 1-command bash startup script for Linux/macOS
 └── README.md               # Project documentation
 ```
 
